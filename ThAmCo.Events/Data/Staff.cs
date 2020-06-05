@@ -22,7 +22,7 @@ namespace ThAmCo.Events.Data
 
         public bool FirstAider { get; set; }
 
-        public List<Staffing> StaffBooking { get; set; }
+        public List<Staffing> Staffing { get; set; }
 
         public string Fullname { get { return FirstName + " " + Surname; } }
     }

@@ -52,7 +52,7 @@ namespace ThAmCo.Events.Data
                    .HasKey(b => new { b.StaffId, b.EventId });
 
             builder.Entity<Staff>()
-                   .HasMany(c => c.StaffBooking)
+                   .HasMany(c => c.Staffing)
                    .WithOne(b => b.Staff)
                    .HasForeignKey(b => b.StaffId);
 
