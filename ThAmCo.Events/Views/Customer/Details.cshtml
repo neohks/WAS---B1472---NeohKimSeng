@@ -1,0 +1,79 @@
+﻿@model ThAmCo.Events.Data.Customer
+
+@{
+    ViewData["Title"] = "Details";
+}
+
+<h2>Details : </h2>
+
+<div>
+    <h4>Customer</h4>
+    <hr />
+    <dl class="dl-horizontal">
+        <dt>
+            @Html.DisplayNameFor(model => model.Surname)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.Surname)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.FirstName)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.FirstName)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.Email)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.Email)
+        </dd>
+    </dl>
+</div>
+
+<div>
+    <a asp-action="Edit" asp-route-id="@Model.Id">Edit</a> |
+    <a asp-action="CustomerIndex">Back to List</a>
+</div>
+
+<h3> List of Events : </h3>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Bookings.FirstOrDefault().Event.Title)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Bookings.FirstOrDefault().Event.Date)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Bookings.FirstOrDefault().Event.Duration)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Bookings.FirstOrDefault().Attended)
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model.Bookings)
+        {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.Event.Title)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Event.Date)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Event.Duration)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Attended)
+            </td>
+        </tr>
+        }
+    </tbody>
+</table>
+
+

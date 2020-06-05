@@ -9,6 +9,8 @@ namespace ThAmCo.Events.Data
         public DbSet<Customer> Customers { get; set; }
         public DbSet<Event> Events { get; set; }
         public DbSet<GuestBooking> Guests { get; set; }
+        public DbSet<Staff> Staff { get; set; }
+        public DbSet<Staffing> Staffing { get; set; }
 
         private IHostingEnvironment HostEnv { get; }
 
@@ -46,6 +48,14 @@ namespace ThAmCo.Events.Data
                    .Property(e => e.TypeId)
                    .IsFixedLength();
 
+            builder.Entity<Staffing>()
+                   .HasKey(b => new { b.StaffId, b.EventId });
+
+            builder.Entity<Staff>()
+                   .HasMany(c => c.StaffBooking)
+                   .WithOne(b => b.Staff)
+                   .HasForeignKey(b => b.StaffId);
+
             // seed data for debug / development testing
             if (HostEnv != null && HostEnv.IsDevelopment())
             {
@@ -65,6 +75,19 @@ namespace ThAmCo.Events.Data
                     new GuestBooking { CustomerId = 2, EventId = 1, Attended = false },
                     new GuestBooking { CustomerId = 1, EventId = 2, Attended = false },
                     new GuestBooking { CustomerId = 3, EventId = 2, Attended = false }
+                );
+
+                builder.Entity<Staff>().HasData(
+                    new Staff { StaffId = 1, Surname = "Finn", FirstName = "Neoh", Email = "choo@fcuc.com", FirstAider = false },
+                    new Staff { StaffId = 2, Surname = "Alex", FirstName = "Lee", Email = "alex@fcuc.com", FirstAider = true },
+                    new Staff { StaffId = 3, Surname = "Leon", FirstName = "Alexander", Email = "leon@fcuc.com", FirstAider = true }
+                );
+
+                builder.Entity<Staffing>().HasData(
+                    new Staffing { StaffId = 1, EventId = 1 },
+                    new Staffing { StaffId = 2, EventId = 1 },
+                    new Staffing { StaffId = 1, EventId = 2 },
+                    new Staffing { StaffId = 3, EventId = 2 }
                 );
             }
         }

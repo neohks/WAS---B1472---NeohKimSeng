@@ -1,0 +1,53 @@
+﻿@model ThAmCo.Events.ViewModels.Guests.Index
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h2>GuestIndex</h2>
+
+<p>
+    <a asp-action="Create" asp-items=Id>Book an Event</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Guests.FirstOrDefault().Customer)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Guests.FirstOrDefault().Event)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Guests.FirstOrDefault().Attended)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model.Guests)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Customer.Surname)
+                    @Html.DisplayFor(modelItem => item.Customer.FirstName)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Event.Title)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Attended)
+                </td>
+                <td>
+                    <a asp-action="Edit" asp-route-cusid="@item.CustomerId" asp-route-eventid="@item.EventId">Register</a> |
+                    <a asp-action="Delete" asp-route-cusid="@item.CustomerId" asp-route-eventid="@item.EventId">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
+

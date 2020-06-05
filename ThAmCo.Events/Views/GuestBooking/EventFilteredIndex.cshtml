@@ -1,0 +1,50 @@
+﻿@model ThAmCo.Events.ViewModels.Guests.Index
+
+@{
+
+    ViewData["Title"] = "EventFilteredIndex";
+}
+
+<h2>@Model.EventTitle</h2>
+
+<h3> Total Guest : @Model.Guests.ToList().Count() </h3>
+<h3> Total Attended Guests: @Model.Guests.Where(m => m.Attended).ToList().Count() </h3>
+
+
+<p>
+    <a asp-action="EventFilteredCreate" asp-items=Id asp-route-eventId="@Model.EventId">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Guests.FirstOrDefault().Customer)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Guests.FirstOrDefault().Attended)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model.Guests)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Customer.Fullname)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Attended)
+                </td>
+                <td>
+                    <a asp-controller="GuestBooking" asp-action="Edit" asp-route-cusid="@item.CustomerId" asp-route-eventid="@item.EventId">Register</a> |
+                    <a asp-controller="GuestBooking" asp-action="Delete" asp-route-cusid="@item.CustomerId" asp-route-eventid="@item.EventId">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
