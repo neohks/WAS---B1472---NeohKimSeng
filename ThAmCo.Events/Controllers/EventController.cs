@@ -27,7 +27,8 @@ namespace ThAmCo.Events.Controllers
         // GET: All Events
         public async Task<IActionResult> EventIndex()
         {
-            return View(await _eventContext.Events.Include(sb => sb.Bookings).Include(s=> s.Staffings).ToListAsync());
+            //Should add API call to check Venue
+            return View(await _eventContext.Events.Include(b => b.Bookings).Include(s=> s.Staffings).ThenInclude(s => s.Staff).ToListAsync());
         }
 
         // GET: Event Details
@@ -39,6 +40,10 @@ namespace ThAmCo.Events.Controllers
             }
 
             var @event = await _eventContext.Events
+                .Include(b => b.Bookings)
+                .ThenInclude(g => g.Customer)
+                .Include(a => a.Staffings)
+                .ThenInclude(g => g.Staff)
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (@event == null)
             {
@@ -188,14 +193,13 @@ namespace ThAmCo.Events.Controllers
             {
                 HttpClient client1 = new HttpClient();
 
-                //Build the url api
+                //Build the url api, delete the reserved venue
                 var VenueBuilder = new UriBuilder("http://localhost");
                 VenueBuilder.Port = 23652;
                 VenueBuilder.Path = "api/Reservations/" + @event.VenueCode;
                 client1.DefaultRequestHeaders.Accept.ParseAdd("application/json");
                 string url = VenueBuilder.ToString();
-
-
+                
                 HttpResponseMessage response1 = await client1.DeleteAsync(url);
 
                 if (response1.IsSuccessStatusCode)
@@ -233,7 +237,45 @@ namespace ThAmCo.Events.Controllers
             return RedirectToAction(nameof(EventIndex));
         }
 
+        // Cancel (Soft delete) Venue and Staffs
+        public async Task<IActionResult> CancelEvent(int id)
+        {
+            var @event = await _eventContext.Events.Include(e => e.Staffings).FirstOrDefaultAsync(m => m.Id == id);
 
+            if (@event.VenueCode != null)
+            {
+                HttpClient client1 = new HttpClient();
+
+                var VenueBuilder = new UriBuilder("http://localhost");
+                VenueBuilder.Port = 23652;
+                VenueBuilder.Path = "api/Reservations/" + @event.VenueCode;
+                client1.DefaultRequestHeaders.Accept.ParseAdd("application/json");
+                string url = VenueBuilder.ToString();
+
+
+                HttpResponseMessage response1 = await client1.DeleteAsync(url);
+
+                if (response1.IsSuccessStatusCode)
+                {
+                    @event.VenueCode = null;
+
+                    _eventContext.Update(@event);
+                    await _eventContext.SaveChangesAsync();
+                }
+            }
+
+            if (@event.Staffings.Count() > 0)
+            {
+                foreach (Staffing s in @event.Staffings)
+                {
+                    _eventContext.Remove(s);
+                }
+
+                await _eventContext.SaveChangesAsync();
+            }
+
+            return RedirectToAction(nameof(EventIndex));
+        }
 
     }
 }

@@ -22,9 +22,13 @@ namespace ThAmCo.Events.Controllers
         public async Task<IActionResult> StaffingIndex()
         {
             var staffDbContext = _eventContext.Staffing.Include(s => s.Staff).Include(e => e.Event);
+            var eventDbContext = _eventContext.Events;
+            var guestDbContext = _eventContext.Guests;
 
             var indexVm = new ViewModels.Staffing.Index(
                 await staffDbContext.ToListAsync(),
+                await eventDbContext.ToListAsync(),
+                await guestDbContext.ToListAsync(),
                 0,
                 0,
                 "",

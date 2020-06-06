@@ -25,9 +25,11 @@ namespace ThAmCo.Events.Controllers
         public async Task<IActionResult> GuestIndex()
         {
             var guestDbContext = _eventContext.Guests.Include(t => t.Customer).Include(t => t.Event);
+            var eventDbContext = _eventContext.Events;
 
             var indexVm = new ViewModels.Guests.Index(
                 await guestDbContext.ToListAsync(),
+                await eventDbContext.ToListAsync(),
                 0,
                 0,
                 "",
@@ -44,6 +46,7 @@ namespace ThAmCo.Events.Controllers
 
             var indexVm = new ViewModels.Guests.Index(
                 await guestDbContext.ToListAsync(),
+                null,
                 id,
                 0,
                 cusName,
@@ -59,6 +62,7 @@ namespace ThAmCo.Events.Controllers
 
             var indexVm = new ViewModels.Guests.Index(
                 await guestDbContext.ToListAsync(),
+                null,
                 0,
                 id,
                 "",
