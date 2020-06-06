@@ -156,10 +156,13 @@ namespace ThAmCo.Events.Controllers
             customer.FirstName = "null";
             customer.Surname = "null";
             customer.Email = "null@null.null";
+            //Tell View to enable Delete button
+            TempData["Anonymise"] = "Done";
 
             _eventContext.Update(customer);
             await _eventContext.SaveChangesAsync();
-            return RedirectToAction(nameof(CustomerIndex));
+
+            return RedirectToAction("Delete","Customer",new { id });
         }
 
 

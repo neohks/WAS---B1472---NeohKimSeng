@@ -39,9 +39,8 @@
             <td>
                 <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
                 <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a> |
-                <a asp-action="Anonymise" asp-route-id="@item.Id">Anonymise</a> @*|
-                <a asp-controller="GuestBooking" asp-action="CustomerFilteredIndex" asp-route-id="@item.Id" asp-route-cusname="@item.Fullname">Booking</a>*@
+                <a asp-action="Delete" asp-route-id="@item.Id">Permenant Delete</a> 
+                @*<a asp-controller="GuestBooking" asp-action="CustomerFilteredIndex" asp-route-id="@item.Id" asp-route-cusname="@item.Fullname">Booking</a>*@
             </td>
         </tr>
 }

@@ -31,12 +31,26 @@
         </dd>
     </dl>
 
+
+
     <form asp-action="Delete">
         <input type="hidden" asp-for="Id" />
+        <input asp-action="Anonymise" type="submit" value="Anonymise" onclick="anonymise()" class="btn btn-default" /> |
         <input type="submit" value="Delete" class="btn btn-default" /> |
+
         <a asp-action="Index">Back to List</a>
     </form>
+    <p id="textWarning" class="text-danger">Please anonymise the customer data before deleting it. </p>
+
 </div>
+
+<script type="text/javascript">
+
+    $("#anonBtn").click(function () {
+        alert("Hello");
+    });
+
+</script>
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
