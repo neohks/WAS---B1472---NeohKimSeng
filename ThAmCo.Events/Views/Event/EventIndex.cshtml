@@ -25,6 +25,9 @@
                 @Html.DisplayNameFor(model => model.TypeId)
             </th>
             <th>
+                Guests Total
+            </th>
+            <th>
                 @Html.DisplayNameFor(model => model.VenueCode)
             </th>
             <th></th>
@@ -44,6 +47,9 @@
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.TypeId)
+            </td>
+            <td>
+                @item.Bookings.Count()
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.VenueCode)

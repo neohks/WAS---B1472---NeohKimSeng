@@ -10,17 +10,17 @@ namespace ThAmCo.Events.Controllers
 {
     public class CustomerController : Controller
     {
-        private readonly EventsDbContext _eventDB;
+        private readonly EventsDbContext _eventContext;
 
-        public CustomerController(EventsDbContext eventdb)
+        public CustomerController(EventsDbContext eventContext)
         {
-            _eventDB = eventdb;
+            _eventContext = eventContext;
         }
 
         //GET: All Customers
         public async Task<IActionResult> CustomerIndex()
         {
-            return View(await _eventDB.Customers.ToListAsync());
+            return View(await _eventContext.Customers.ToListAsync());
         }
 
         // GET: Customer Details
@@ -31,7 +31,7 @@ namespace ThAmCo.Events.Controllers
                 return NotFound();
             }
 
-            var customer = await _eventDB.Customers
+            var customer = await _eventContext.Customers
                 .Include(b => b.Bookings)
                 .ThenInclude(e => e.Event)
                 .FirstOrDefaultAsync(m => m.Id == id);
@@ -56,8 +56,8 @@ namespace ThAmCo.Events.Controllers
         {
             if (ModelState.IsValid)
             {
-                _eventDB.Add(customer);
-                await _eventDB.SaveChangesAsync();
+                _eventContext.Add(customer);
+                await _eventContext.SaveChangesAsync();
                 return RedirectToAction(nameof(CustomerIndex)); //Go back to Index (Customer Main Page)
             }
             return View(customer);
@@ -71,7 +71,7 @@ namespace ThAmCo.Events.Controllers
                 return NotFound();
             }
 
-            var customer = await _eventDB.Customers.FindAsync(id);
+            var customer = await _eventContext.Customers.FindAsync(id);
             if (customer == null)
             {
                 return NotFound();
@@ -93,12 +93,12 @@ namespace ThAmCo.Events.Controllers
             {
                 try
                 {
-                    _eventDB.Update(customer);
-                    await _eventDB.SaveChangesAsync();
+                    _eventContext.Update(customer);
+                    await _eventContext.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!_eventDB.Customers.Any(e => e.Id == id))
+                    if (!_eventContext.Customers.Any(e => e.Id == id))
                     {
                         return NotFound();
                     }
@@ -122,7 +122,7 @@ namespace ThAmCo.Events.Controllers
                 return NotFound();
             }
 
-            var customer = await _eventDB.Customers
+            var customer = await _eventContext.Customers
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (customer == null)
             {
@@ -137,17 +137,17 @@ namespace ThAmCo.Events.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
         {
-            var customer = await _eventDB.Customers.FindAsync(id);
-            _eventDB.Remove(customer);
+            var customer = await _eventContext.Customers.FindAsync(id);
+            _eventContext.Remove(customer);
 
-            await _eventDB.SaveChangesAsync();
+            await _eventContext.SaveChangesAsync();
             return RedirectToAction(nameof(CustomerIndex));
         }
 
         // POST: Permenantly Anonymise a Customer
         public async Task<IActionResult> Anonymise(int id)
         {
-            var customer = await _eventDB.Customers
+            var customer = await _eventContext.Customers
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (customer == null)
             {
@@ -157,8 +157,8 @@ namespace ThAmCo.Events.Controllers
             customer.Surname = "null";
             customer.Email = "null@null.null";
 
-            _eventDB.Update(customer);
-            await _eventDB.SaveChangesAsync();
+            _eventContext.Update(customer);
+            await _eventContext.SaveChangesAsync();
             return RedirectToAction(nameof(CustomerIndex));
         }
 

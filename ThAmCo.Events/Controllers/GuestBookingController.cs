@@ -12,11 +12,11 @@ namespace ThAmCo.Events.Controllers
 {
     public class GuestBookingController : Controller
     {
-        private readonly EventsDbContext _eventDB;
+        private readonly EventsDbContext _eventContext;
 
-        public GuestBookingController(EventsDbContext eventDB)
+        public GuestBookingController(EventsDbContext eventContext)
         {
-            _eventDB = eventDB;
+            _eventContext = eventContext;
         }
 
         #region Indexes
@@ -24,7 +24,7 @@ namespace ThAmCo.Events.Controllers
         //GET: All Guests   
         public async Task<IActionResult> GuestIndex()
         {
-            var guestDbContext = _eventDB.Guests.Include(t => t.Customer).Include(t => t.Event);
+            var guestDbContext = _eventContext.Guests.Include(t => t.Customer).Include(t => t.Event);
 
             var indexVm = new ViewModels.Guests.Index(
                 await guestDbContext.ToListAsync(),
@@ -39,7 +39,7 @@ namespace ThAmCo.Events.Controllers
         // GET: GuestBooking (filtered by CusId)
         public async Task<IActionResult> CustomerFilteredIndex(int id, string cusName)
         {
-            var guestDbContext = _eventDB.Guests.Include(t => t.Customer).Include(t => t.Event).Where(t => t.CustomerId == id);
+            var guestDbContext = _eventContext.Guests.Include(t => t.Customer).Include(t => t.Event).Where(t => t.CustomerId == id);
 
 
             var indexVm = new ViewModels.Guests.Index(
@@ -55,7 +55,7 @@ namespace ThAmCo.Events.Controllers
         // GET: GuestBooking (filtered by EventId)
         public async Task<IActionResult> EventFilteredIndex(int id, string title)
         {
-            var guestDbContext = _eventDB.Guests.Include(t => t.Customer).Include(t => t.Event).Where(t => t.EventId == id);
+            var guestDbContext = _eventContext.Guests.Include(t => t.Customer).Include(t => t.Event).Where(t => t.EventId == id);
 
             var indexVm = new ViewModels.Guests.Index(
                 await guestDbContext.ToListAsync(),
@@ -73,8 +73,8 @@ namespace ThAmCo.Events.Controllers
 
         public IActionResult Create()
         {
-            ViewData["CustomerId"] = new SelectList(_eventDB.Customers, "Id", "Fullname");
-            ViewData["EventId"] = new SelectList(_eventDB.Events, "Id", "Title");
+            ViewData["CustomerId"] = new SelectList(_eventContext.Customers, "Id", "Fullname");
+            ViewData["EventId"] = new SelectList(_eventContext.Events, "Id", "Title");
 
             return View();
         }
@@ -86,31 +86,33 @@ namespace ThAmCo.Events.Controllers
         {
             if (ModelState.IsValid)
             {
-                _eventDB.Add(guest);
+                _eventContext.Add(guest);
 
                 try
                 {
-                    await _eventDB.SaveChangesAsync();
+                    await _eventContext.SaveChangesAsync();
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
-                    TempData["msg"] = "<script>alert('Change succesfully');</script>";
+                    String x = ex.Message;
+
+                    TempData["msg"] = "Error";
                     
                     throw;
                 }
 
                 return RedirectToAction(nameof(GuestIndex));
             }
-            ViewData["CustomerId"] = new SelectList(_eventDB.Customers, "Id", "Fullname", guest.Customer);
-            ViewData["EventId"] = new SelectList(_eventDB.Events, "Id", "Title", guest.Event);
+            ViewData["CustomerId"] = new SelectList(_eventContext.Customers, "Id", "Fullname", guest.Customer);
+            ViewData["EventId"] = new SelectList(_eventContext.Events, "Id", "Title", guest.Event);
             return View(guest);
         }
 
         // GET: Guests /Create (Filtered by customer)
         public IActionResult CustomerFilteredCreate(int? cusId)
         {
-            ViewData["CustomerId"] = new SelectList(_eventDB.Customers, "Id", "Fullname");
-            ViewData["EventId"] = new SelectList(_eventDB.Events, "Id", "Title");
+            ViewData["CustomerId"] = new SelectList(_eventContext.Customers, "Id", "Fullname");
+            ViewData["EventId"] = new SelectList(_eventContext.Events, "Id", "Title");
 
             var guest = new GuestBooking()
             {
@@ -123,8 +125,8 @@ namespace ThAmCo.Events.Controllers
         // GET: Timesheet/Create (Filtered by event)
         public IActionResult EventFilteredCreate(int? eventId)
         {
-            ViewData["CustomerId"] = new SelectList(_eventDB.Customers, "Id", "Fullname");
-            ViewData["EventId"] = new SelectList(_eventDB.Events, "Id", "Title");
+            ViewData["CustomerId"] = new SelectList(_eventContext.Customers, "Id", "Fullname");
+            ViewData["EventId"] = new SelectList(_eventContext.Events, "Id", "Title");
 
             var guest = new GuestBooking()
             {
@@ -149,13 +151,13 @@ namespace ThAmCo.Events.Controllers
             }
             editCusId = cusid;
 
-            var guest = await _eventDB.Guests.FindAsync(cusid, eventid);
+            var guest = await _eventContext.Guests.FindAsync(cusid, eventid);
             if (guest == null)
             {
                 return NotFound();
             }
-            ViewData["CustomerId"] = new SelectList(_eventDB.Customers, "Id", "Fullname", guest.CustomerId);
-            ViewData["EventId"] = new SelectList(_eventDB.Events, "Id", "Title", guest.EventId);
+            ViewData["CustomerId"] = new SelectList(_eventContext.Customers, "Id", "Fullname", guest.CustomerId);
+            ViewData["EventId"] = new SelectList(_eventContext.Events, "Id", "Title", guest.EventId);
             return View(guest);
         }
 
@@ -176,12 +178,12 @@ namespace ThAmCo.Events.Controllers
             {
                 try
                 {
-                    _eventDB.Update(guest);
-                    await _eventDB.SaveChangesAsync();
+                    _eventContext.Update(guest);
+                    await _eventContext.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!_eventDB.Guests.Any(e => e.CustomerId == guest.CustomerId && e.EventId == guest.EventId))
+                    if (!_eventContext.Guests.Any(e => e.CustomerId == guest.CustomerId && e.EventId == guest.EventId))
                     {
                         return NotFound();
                     }
@@ -192,8 +194,8 @@ namespace ThAmCo.Events.Controllers
                 }
                 return RedirectToAction(nameof(GuestIndex));
             }
-            ViewData["CustomerId"] = new SelectList(_eventDB.Customers, "Id", "Fullname", guest.CustomerId);
-            ViewData["EventId"] = new SelectList(_eventDB.Events, "Id", "Title", guest.EventId);
+            ViewData["CustomerId"] = new SelectList(_eventContext.Customers, "Id", "Fullname", guest.CustomerId);
+            ViewData["EventId"] = new SelectList(_eventContext.Events, "Id", "Title", guest.EventId);
             return View(guest);
         }
 
@@ -209,7 +211,7 @@ namespace ThAmCo.Events.Controllers
                 return NotFound();
             }
 
-            var guest = await _eventDB.Guests
+            var guest = await _eventContext.Guests
                 .Include(g => g.Customer)
                 .Include(g => g.Event)
                 .FirstOrDefaultAsync(m => m.CustomerId == cusid && m.EventId == eventid);
@@ -230,15 +232,15 @@ namespace ThAmCo.Events.Controllers
             int cusid = pairIDs["CustomerId"];
             int eventid = pairIDs["EventId"];
 
-            guest = await _eventDB.Guests
+            guest = await _eventContext.Guests
                 .Include(g => g.Customer)
                 .Include(g => g.Event)
                 .FirstOrDefaultAsync(m => m.EventId == eventid && m.CustomerId == cusid);
 
             try
             {
-                _eventDB.Guests.Remove(guest);
-                await _eventDB.SaveChangesAsync();
+                _eventContext.Guests.Remove(guest);
+                await _eventContext.SaveChangesAsync();
             }
             catch (Exception)
             {
