@@ -1,0 +1,81 @@
+﻿@model ThAmCo.Events.Data.Staff
+
+@{
+    ViewData["Title"] = "Details";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Details</h2>
+
+<div>
+    <h4>Staff : @Model.Fullname</h4>
+    <hr />
+    <dl class="dl-horizontal">
+        <dt>
+            @Html.DisplayNameFor(model => model.Surname)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.Surname)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.FirstName)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.FirstName)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.Email)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.Email)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.FirstAider)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.FirstAider)
+        </dd>
+    </dl>
+</div>
+
+<div>
+    <a asp-action="Edit" asp-route-staffid="@Model.StaffId">Edit</a> |
+    <a asp-action="StaffIndex">Back to List</a>
+</div>
+
+<h3> Upcoming events : </h3>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Staffing.FirstOrDefault().Event.Title)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Staffing.FirstOrDefault().Event.Date)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Staffing.FirstOrDefault().Event.Duration)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model.Staffing)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Event.Title)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Event.Date)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Event.Duration)
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+

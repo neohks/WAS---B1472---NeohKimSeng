@@ -23,6 +23,7 @@ namespace ThAmCo.Events.Data
         public string TypeId { get; set; }
 
         public List<GuestBooking> Bookings { get; set; }
+        public List<Staffing> Staffings { get; set; }
 
         public string VenueCode { get; set; }
     }

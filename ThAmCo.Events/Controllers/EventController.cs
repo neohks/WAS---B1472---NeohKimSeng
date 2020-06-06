@@ -27,7 +27,7 @@ namespace ThAmCo.Events.Controllers
         // GET: All Events
         public async Task<IActionResult> EventIndex()
         {
-            return View(await _eventContext.Events.Include(sb => sb.Bookings).ToListAsync());
+            return View(await _eventContext.Events.Include(sb => sb.Bookings).Include(s=> s.Staffings).ToListAsync());
         }
 
         // GET: Event Details
@@ -130,7 +130,7 @@ namespace ThAmCo.Events.Controllers
             var @event = await _eventContext.Events
                 .FirstOrDefaultAsync(m => m.Id == id);
 
-            //Check for the availability first
+            //Check for the availability first by building the uri
             HttpClient client = new HttpClient();
             var VenueBuilder = new UriBuilder("http://localhost");
             VenueBuilder.Port = 23652;
@@ -138,12 +138,12 @@ namespace ThAmCo.Events.Controllers
 
             //Make a query for availibility request
             //AvailabilityController need 3 params
-            //api/Availability?eventType=X?beginDate=X&endDate=X
+            
             var VenueQuery = HttpUtility.ParseQueryString(VenueBuilder.Query);
             VenueQuery["eventType"] = @event.TypeId;
             VenueQuery["beginDate"] = @event.Date.ToString("yyyy/MM/dd HH:mm:ss");
             VenueQuery["endDate"] = @event.Date.Add(@event.Duration.Value).ToString("yyyy/MM/dd HH:mm:ss");
-            VenueBuilder.Query = VenueQuery.ToString();
+            VenueBuilder.Query = VenueQuery.ToString(); //api/Availability?eventType=MET?beginDate=X&endDate=X
 
             //Compile them into one string, then get async from web api
             String url = VenueBuilder.ToString();
