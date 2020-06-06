@@ -24,6 +24,6 @@ namespace ThAmCo.Events.Data
 
         public List<Staffing> Staffing { get; set; }
 
-        public string Fullname { get { return FirstName + " " + Surname; } }
+        public string Fullname { get { return Surname + " " + FirstName; } }
     }
 }
