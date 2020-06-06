@@ -82,8 +82,8 @@
                 <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
                 <a asp-action="Delete" asp-route-id="@item.Id">Delete</a> <br>
                 <a asp-action="ReserveVenue" asp-route-id="@item.Id">Reserve Venue</a> |
-                <a asp-action="CancelEvent" asp-route-id="@item.Id">Cancel</a> |
-                <a asp-controller="GuestBooking" asp-action="EventFilteredIndex" asp-route-id="@item.Id" asp-route-title="@item.Title">Guest List</a>
+                <a asp-action="CancelEvent" asp-route-id="@item.Id">Cancel</a> 
+                @*<a asp-controller="GuestBooking" asp-action="EventFilteredIndex" asp-route-id="@item.Id" asp-route-title="@item.Title">Guest List</a>*@
             </td>
         </tr>
 }
