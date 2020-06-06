@@ -7,9 +7,10 @@ namespace ThAmCo.Events.ViewModels.Guests
 {
     public class Index
     {
-        public Index(List<Data.GuestBooking> guests, int cusid, int eventid, string cusName, string eventTitle)
+        public Index(List<Data.GuestBooking> guests, List<Data.Event> events, int cusid, int eventid, string cusName, string eventTitle)
         {
             Guests = guests;
+            Events = events;
             CustomerId = cusid;
             EventId = eventid;
             CustomerName = cusName;
@@ -17,6 +18,7 @@ namespace ThAmCo.Events.ViewModels.Guests
         }
 
         public List<Data.GuestBooking> Guests { get; set; }
+        public List<Data.Event> Events { get; set; }
 
         public int CustomerId { get; set; }
         public string CustomerName { get; set; }
