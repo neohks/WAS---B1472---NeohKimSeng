@@ -19,16 +19,19 @@
                 @Html.DisplayNameFor(model => model.Date)
             </th>
             <th>
+                Warnings
+            </th>
+            <th>
                 @Html.DisplayNameFor(model => model.Duration)
             </th>
             <th>
                 @Html.DisplayNameFor(model => model.TypeId)
             </th>
             <th>
-                Guests Total
+                Total Guests
             </th>
             <th>
-                Staffs Total
+                Total Staffs
             </th>
             <th>
                 @Html.DisplayNameFor(model => model.VenueCode)
@@ -44,6 +47,20 @@
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.Date)
+            </td>
+            <td>
+                @if ((item.Staffings.Count() <= (item.Bookings.Count() / 10)) && item.Bookings.Count() > 0)
+                {
+                    <p class="text-danger">
+                        <b>+ Staff Insufficient</b>
+                    </p>
+                }
+                @if ((item.Staffings.Where(a => a.Staff.FirstAider).Count() == 0) && item.Bookings.Count() > 0)
+                {
+                    <p class="text-danger">
+                        <b>+ Require First Aider</b>
+                    </p>
+                }
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.Duration)
@@ -63,8 +80,9 @@
             <td>
                 <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
                 <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a> |
+                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a> <br>
                 <a asp-action="ReserveVenue" asp-route-id="@item.Id">Reserve Venue</a> |
+                <a asp-action="CancelEvent" asp-route-id="@item.Id">Cancel</a> |
                 <a asp-controller="GuestBooking" asp-action="EventFilteredIndex" asp-route-id="@item.Id" asp-route-title="@item.Title">Guest List</a>
             </td>
         </tr>

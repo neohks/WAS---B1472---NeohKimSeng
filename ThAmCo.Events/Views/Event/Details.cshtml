@@ -34,9 +34,90 @@
         <dd>
             @Html.DisplayFor(model => model.TypeId)
         </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.VenueCode)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.VenueCode)
+        </dd>
     </dl>
 </div>
+
 <div>
     <a asp-action="Edit" asp-route-id="@Model.Id">Edit</a> |
     <a asp-action="EventIndex">Back to List</a>
 </div>
+
+<h3> List of Guests : </h3>
+
+<table class="table table-responsive table-striped">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Bookings.FirstOrDefault().Customer.FirstName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Bookings.FirstOrDefault().Customer.Surname)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Bookings.FirstOrDefault().Customer.Email)
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model.Bookings)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Customer.FirstName)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Customer.Surname)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Customer.Email)
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<h3> List of Staffs : </h3>
+
+<table class="table table-responsive table-striped">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Staffings.FirstOrDefault().Staff.FirstName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Staffings.FirstOrDefault().Staff.Surname)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Staffings.FirstOrDefault().Staff.Email)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Staffings.FirstOrDefault().Staff.FirstAider)
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model.Staffings)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Staff.FirstName)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Staff.Surname)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Staff.Email)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Staff.FirstAider)
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
