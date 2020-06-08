@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using ThAmCo.Events.Data;
 using ThAmCo.Events.Services;
+using ThAmCo.Events.ViewModels;
 
 namespace ThAmCo.Events.Controllers
 {
@@ -135,38 +136,30 @@ namespace ThAmCo.Events.Controllers
             var @event = await _eventContext.Events
                 .FirstOrDefaultAsync(m => m.Id == id);
 
-            //Check for the availability first by building the uri
-            HttpClient client = new HttpClient();
-            var VenueBuilder = new UriBuilder("http://localhost");
-            VenueBuilder.Port = 23652;
-            VenueBuilder.Path = "api/Availability";
+            HttpClient client = getClient("23652");
 
             //Make a query for availibility request
             //AvailabilityController need 3 params
-            
-            var VenueQuery = HttpUtility.ParseQueryString(VenueBuilder.Query);
-            VenueQuery["eventType"] = @event.TypeId;
-            VenueQuery["beginDate"] = @event.Date.ToString("yyyy/MM/dd HH:mm:ss");
-            VenueQuery["endDate"] = @event.Date.Add(@event.Duration.Value).ToString("yyyy/MM/dd HH:mm:ss");
-            VenueBuilder.Query = VenueQuery.ToString(); //api/Availability?eventType=MET?beginDate=X&endDate=X
-
             //Compile them into one string, then get async from web api
-            String url = VenueBuilder.ToString();
-            client.DefaultRequestHeaders.Accept.ParseAdd("application/json");
+            String url = $"api/Availability?" +
+                $"eventType={@event.TypeId}&" +
+                $"beginDate={@event.Date.ToString("yyyy/MM/dd HH:mm:ss")}&" +
+                $"endDate={@event.Date.Add(@event.Duration.Value).ToString("yyyy/MM/dd HH:mm:ss")}";
+
             HttpResponseMessage response = await client.GetAsync(url);
 
-            var Venue = await response.Content.ReadAsAsync<IEnumerable<VenueEvent>>();
-            if (response.IsSuccessStatusCode)
+            if (response.IsSuccessStatusCode)  
             {
-                if (Venue.Count() == 0)
+                var venue = await response.Content.ReadAsAsync<IEnumerable<VenueEvent>>();
+
+                if (venue.Count() == 0)
                 {
                     ViewData["None"] = "None";
                 }
                 else
                 {
-                    ViewData["Venues"] = new SelectList(Venue, "Code", "Name");
+                    ViewData["Venues"] = new SelectList(venue, "Code", "Name");
                 }
-                
             }
             else
             {
@@ -179,7 +172,7 @@ namespace ThAmCo.Events.Controllers
         }
 
         // POST: Reserve an event
-        public async Task<IActionResult> ConfirmReservation(int id, string VenueCode, int StaffId)
+        public async Task<IActionResult> ConfirmReservation(int id, string VenueCode, int staffId)
         {
             var @event = await _eventContext.Events
                .FirstOrDefaultAsync(m => m.Id == id);
@@ -188,38 +181,34 @@ namespace ThAmCo.Events.Controllers
                 return NotFound();
             }
 
+            HttpClient client = getClient("23652");
+
             //If alrdy have venue reserve, then delete the old one
             if (@event.VenueCode != null)
             {
-                HttpClient client1 = new HttpClient();
-
-                //Build the url api, delete the reserved venue
-                var VenueBuilder = new UriBuilder("http://localhost");
-                VenueBuilder.Port = 23652;
-                VenueBuilder.Path = "api/Reservations/" + @event.VenueCode;
-                client1.DefaultRequestHeaders.Accept.ParseAdd("application/json");
-                string url = VenueBuilder.ToString();
                 
-                HttpResponseMessage response1 = await client1.DeleteAsync(url);
+                //Build the url api, delete the reserved venue
+                String url = "api/Reservations?" + @event.VenueCode;
 
-                if (response1.IsSuccessStatusCode)
+                HttpResponseMessage responseRes = await client.DeleteAsync(url);
+
+                if (responseRes.IsSuccessStatusCode)
                 {
-
                     @event.VenueCode = null;
                     _eventContext.Update(@event);
                     await _eventContext.SaveChangesAsync();
                 }
+                else
+                {
+                    //Prompt Error Msg
+                }
             }
-
-            HttpClient client = new HttpClient();
-            client.BaseAddress = new System.Uri("http://localhost:23652");
-            client.DefaultRequestHeaders.Accept.ParseAdd("application/json");
 
             ReservationPostApi req = new ReservationPostApi
             {
                 EventDate = @event.Date,
                 VenueCode = VenueCode,
-                StaffId = StaffId
+                StaffId = staffId //Null for now, later if can, add this
             };
 
             HttpResponseMessage response = await client.PostAsJsonAsync("api/Reservations", req);
@@ -228,7 +217,8 @@ namespace ThAmCo.Events.Controllers
             {
                 var Reservation = await response.Content.ReadAsAsync<ReservationGetApi>();
 
-                @event.VenueCode = Reservation.Reference;
+                @event.VenueCode = Reservation.VenueCode;
+                @event.VenueReference = Reservation.Reference;
                 _eventContext.Update(@event);
 
                 await _eventContext.SaveChangesAsync();
@@ -242,21 +232,17 @@ namespace ThAmCo.Events.Controllers
         {
             var @event = await _eventContext.Events.Include(e => e.Staffings).FirstOrDefaultAsync(m => m.Id == id);
 
-            if (@event.VenueCode != null)
+            HttpClient client = getClient("23652");
+            //If have Venue, delete it first
+            if (@event.VenueReference != null)
             {
-                HttpClient client1 = new HttpClient();
+                string url = "api/Reservations/" + @event.VenueReference;
 
-                var VenueBuilder = new UriBuilder("http://localhost");
-                VenueBuilder.Port = 23652;
-                VenueBuilder.Path = "api/Reservations/" + @event.VenueCode;
-                client1.DefaultRequestHeaders.Accept.ParseAdd("application/json");
-                string url = VenueBuilder.ToString();
+                HttpResponseMessage responseRes = await client.DeleteAsync(url);
 
-
-                HttpResponseMessage response1 = await client1.DeleteAsync(url);
-
-                if (response1.IsSuccessStatusCode)
+                if (responseRes.IsSuccessStatusCode)
                 {
+                    @event.VenueReference = null;
                     @event.VenueCode = null;
 
                     _eventContext.Update(@event);
@@ -275,6 +261,20 @@ namespace ThAmCo.Events.Controllers
             }
 
             return RedirectToAction(nameof(EventIndex));
+        }
+
+
+
+        // Connects an HttpClient to a selected port
+        private HttpClient getClient(string port)
+        {
+            HttpClient client = new HttpClient
+            {
+                BaseAddress = new Uri("http://localhost:" + port)
+            };
+            client.DefaultRequestHeaders.Accept.ParseAdd("application/json");
+
+            return client;
         }
 
     }

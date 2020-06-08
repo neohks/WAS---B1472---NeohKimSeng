@@ -26,5 +26,6 @@ namespace ThAmCo.Events.Data
         public List<Staffing> Staffings { get; set; }
 
         public string VenueCode { get; set; }
+        public string VenueReference { get; set; }
     }
 }
