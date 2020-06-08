@@ -11,6 +11,8 @@ namespace ThAmCo.Events.Controllers
     public class StaffController : Controller
     {
         private readonly EventsDbContext _eventContext;
+        private string anonName = "null";
+        private string anonMail = "null@null.null";
 
         public StaffController(EventsDbContext eventContext)
         {
@@ -110,7 +112,7 @@ namespace ThAmCo.Events.Controllers
             return View(staff);
         }
 
-        // GET: Staffs/Delete/5
+        // GET: Staff Delete page
         public async Task<IActionResult> Delete(int? staffid)
         {
             if (staffid == null)
@@ -119,24 +121,47 @@ namespace ThAmCo.Events.Controllers
             var staff = await _eventContext.Staff
                 .FirstOrDefaultAsync(m => m.StaffId == staffid);
 
+            if (staff.FirstName == anonName && staff.Surname == anonName && staff.Email == anonMail)
+                TempData["Anonymise"] = "Done";
+
             if (staff == null)
                 return NotFound();
 
             return View(staff);
         }
 
-        // POST: Staffs/Delete/5
-        [HttpPost, ActionName("Delete")]
+        // POST: Delete a staff
+        [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int staffid)
+        public async Task<IActionResult> Delete(int staffid)
         {
             var staff = await _eventContext.Staff.FindAsync(staffid);
-
             _eventContext.Staff.Remove(staff);
+
             await _eventContext.SaveChangesAsync();
             return RedirectToAction(nameof(StaffIndex));
         }
 
+        // GET: Permenantly Anonymise a Staff
+        public async Task<IActionResult> Anonymise(int staffid)
+        {
+            var staff = await _eventContext.Staff
+                .FirstOrDefaultAsync(m => m.StaffId == staffid);
+            if (staff == null)
+            {
+                return NotFound();
+            }
+            staff.FirstName = anonName;
+            staff.Surname = anonName;
+            staff.Email = anonMail;
+            //Tell View to enable Delete button
+            TempData["Anonymise"] = "Done";
+
+            _eventContext.Update(staff);
+            await _eventContext.SaveChangesAsync();
+
+            return RedirectToAction("Delete", "Staff", new { staffid });
+        }
 
     }
 }

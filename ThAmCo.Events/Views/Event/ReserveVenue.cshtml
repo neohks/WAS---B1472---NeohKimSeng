@@ -1,50 +1,8 @@
 ﻿@model ThAmCo.Events.Data.Event
 
-
 @{
     ViewData["Title"] = "ReserveVenue";
 }
-
-
-@*<h2>Available Venues</h2>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                Venue Name
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Venues.FirstOrDefault().Description)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Venues.FirstOrDefault().Capacity)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Venues.FirstOrDefault().CostPerHour)
-            </th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in ViewBag.VenueList)
-        {
-            <tr>
-                <td>
-                    @Html.DisplayFor(modelItem => item.Name)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.Description)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.Capacity)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.CostPerHour)
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>*@
-
 
 <h2>Confirm Reservation</h2>
 <h4>Event : @Model.Title</h4>
@@ -66,7 +24,7 @@
                 {
                     <select asp-for="VenueCode" class="form-control" asp-items="ViewBag.Venues"></select>
 
-                    
+
                 }
             </div>
             <div class="form-group">
@@ -82,8 +40,6 @@
                 }
 
             </div>
-
-
             <div class="form-group">
                 @if (ViewBag.None != null)
                 {
@@ -94,6 +50,9 @@
                     <input type="submit" value="Reserve" class="btn btn-default" />
 
                 }
+            </div>
+            <div class="form-group text-danger">
+                @TempData["msg"]
             </div>
         </form>
     </div>

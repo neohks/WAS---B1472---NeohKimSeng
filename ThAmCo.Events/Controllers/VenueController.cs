@@ -72,7 +72,7 @@ namespace ThAmCo.Events.Controllers
             {
                 indexVM = new VenueVMIndex(
                 availableVenues.ToList(),
-                availableVenues.ToList().GroupBy(o => o.Name).Select(o => o.FirstOrDefault()),
+                availableVenues.ToList().GroupBy(o => o.Name).Select(o => o.FirstOrDefault()), // Group VenueName uniquely (No repeat) 
                 null,
                 null
                 );

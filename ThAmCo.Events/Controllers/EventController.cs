@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Rewrite.Internal.UrlActions;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -8,6 +9,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using ThAmCo.Events.Data;
 using ThAmCo.Events.Services;
+using ThAmCo.Events.ViewModels.Venues;
 using ThAmCo.Venues.Data;
 
 namespace ThAmCo.Events.Controllers
@@ -27,7 +29,18 @@ namespace ThAmCo.Events.Controllers
         // GET: All Events
         public async Task<IActionResult> EventIndex()
         {
-            return View(await _eventContext.Events.Include(b => b.Bookings).Include(s => s.Staffings).ThenInclude(s => s.Staff).ToListAsync());
+            var events = await _eventContext.Events
+                .Include(b => b.Bookings)
+                .Include(s => s.Staffings)
+                .ThenInclude(s => s.Staff)
+                .ToListAsync();
+
+            foreach (var item in events)
+            {
+                item.VenueCode = (item.VenueCode == null) ? "None" : item.VenueCode;
+            }
+
+            return View(events);
         }
 
         // GET: Event Details
@@ -51,6 +64,18 @@ namespace ThAmCo.Events.Controllers
             var eventTypes = await eventTypesResponse.Content.ReadAsAsync<IEnumerable<EventType>>();
             var selectedEvent  = eventTypes.FirstOrDefault(a => a.Id == @event.TypeId);
             ViewData["EventType"] = selectedEvent.Title;
+            ViewData["VenueName"] = "None";
+
+            // If VenueCode exists
+            // Then find its full name through API
+            if (!string.IsNullOrEmpty(@event.VenueCode))
+            {
+                var venues = await getVenuesAsync(selectedEvent.Id, DateTime.MinValue, DateTime.MaxValue);
+
+                var venue = venues.FirstOrDefault(a => a.Code == @event.VenueCode);
+
+                ViewData["VenueName"] = venue.Name;
+            }
 
             if (@event == null)
             {
@@ -134,6 +159,8 @@ namespace ThAmCo.Events.Controllers
             return View(@event);
         }
 
+        private SelectList viewVenueList, viewVenues, viewStaffs;
+
         // Get: Reserve a Venue for Event
         public async Task<IActionResult> ReserveVenue(int? id)
         {
@@ -149,14 +176,13 @@ namespace ThAmCo.Events.Controllers
 
             HttpClient client = getClient("23652");
 
-            //Make a query for availibility request
-            //AvailabilityController need 3 params
-            //Compile them into one string, then get async from web api
+            // Make a query for availibility request
+            // AvailabilityController need 3 params
             String url = $"api/Availability?" +
                 $"eventType={@event.TypeId}&" +
                 $"beginDate={@event.Date.ToString("yyyy/MM/dd HH:mm:ss")}&" +
                 $"endDate={@event.Date.Add(@event.Duration.Value).ToString("yyyy/MM/dd HH:mm:ss")}";
-
+            // Compile them into one string, then get async from web api
             HttpResponseMessage response = await client.GetAsync(url);
 
             if (response.IsSuccessStatusCode)
@@ -173,14 +199,18 @@ namespace ThAmCo.Events.Controllers
                     var staffs = _eventContext.Staff;
 
                     ViewData["VenueList"] = new SelectList(venue.ToList());
+                    viewVenueList = new SelectList(venue.ToList());
 
                     ViewData["Venues"] = new SelectList(venue, "Code", "Name");
+                    viewVenues = new SelectList(venue, "Code", "Name");
+
                     ViewData["Staffs"] = new SelectList(staffs, "StaffId", "Fullname");
+                    viewStaffs = new SelectList(staffs, "StaffId", "Fullname");
                 }
             }
             else
             {
-                //Show alert message?
+                // TODO : Show alert message?
                 ModelState.AddModelError("Error", "Connection has failed, please try again.");
             }
 
@@ -189,6 +219,8 @@ namespace ThAmCo.Events.Controllers
         }
 
         // POST: Reserve an event
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ConfirmReservation(int id, string VenueCode, int Staffings)
         {
             var @event = await _eventContext.Events
@@ -201,25 +233,30 @@ namespace ThAmCo.Events.Controllers
             HttpClient client = getClient("23652");
 
             //If alrdy have venue reserve, then delete the old one
-            if (@event.VenueCode != null)
+            if (@event.VenueReference != null)
             {
-
                 //Build the url api, delete the reserved venue
-                String urlRes = "api/Reservations?" + @event.VenueCode;
+                String urlRes = "api/Reservations/" + @event.VenueReference;
 
                 HttpResponseMessage responseRes = await client.DeleteAsync(urlRes);
 
                 if (responseRes.IsSuccessStatusCode)
                 {
-                    @event.VenueCode = null;
+                    @event.VenueReference = null;
                     _eventContext.Update(@event);
                     await _eventContext.SaveChangesAsync();
                 }
                 else
                 {
-                    //Prompt Error Msg
+                    // TODO : Prompt Error Msg
                 }
             }
+
+            //Set the Venue Cost
+            var venues = await getVenuesAsync(@event.TypeId, @event.Date, @event.Date.Add(@event.Duration.Value));
+            var vCost = venues.FirstOrDefault(a => a.Code == VenueCode);
+
+            @event.VenueCost = vCost.CostPerHour;
 
             ReservationPostApi req = new ReservationPostApi
             {
@@ -241,10 +278,14 @@ namespace ThAmCo.Events.Controllers
                 await _eventContext.SaveChangesAsync();
             }
 
+            //Get Cost
+            
+
             return RedirectToAction(nameof(EventIndex));
         }
 
-        // Cancel (Soft delete) Venue and Staffs
+        // POST: Cancel (Soft delete) Venue and Staffs
+
         public async Task<IActionResult> CancelEvent(int id)
         {
             var @event = await _eventContext.Events.Include(e => e.Staffings).FirstOrDefaultAsync(m => m.Id == id);
@@ -281,6 +322,34 @@ namespace ThAmCo.Events.Controllers
         }
 
 
+        private async Task<IEnumerable<VenueAvailibilityGetApi>> getVenuesAsync(string eventType, DateTime startDate, DateTime endDate)
+        {
+            var availableVenues = new List<VenueAvailibilityGetApi>().AsEnumerable();
+
+            HttpClient client = getClient("23652");
+
+            String url = $"api/Availability?" +
+                $"eventType={eventType}&" +
+                $"beginDate={startDate.ToString("yyyy/MM/dd")}&" +
+                $"endDate={endDate.ToString("yyyy/MM/dd")}";
+
+            HttpResponseMessage response = await client.GetAsync(url);
+
+            if (response.IsSuccessStatusCode)
+            {
+                availableVenues = await response.Content.ReadAsAsync<IEnumerable<VenueAvailibilityGetApi>>();
+
+                if (availableVenues.Count() == 0)
+                {
+                    //No received
+                    TempData["Empty"] = "No Data Found";
+                }
+            }
+
+
+            return availableVenues.ToList().GroupBy(o => o.Name).Select(o => o.FirstOrDefault());
+
+        }
 
         // Connects an HttpClient to a selected port
         private HttpClient getClient(string port)

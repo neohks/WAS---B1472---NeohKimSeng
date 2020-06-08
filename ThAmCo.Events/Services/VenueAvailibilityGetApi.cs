@@ -19,8 +19,8 @@ namespace ThAmCo.Events.ViewModels.Venues
         [DataType(DataType.Date)]
         public DateTime Date { get; set; }
 
-        [Range(0.0, Double.MaxValue)]
-        public double CostPerHour { get; set; }
+
+        public decimal CostPerHour { get; set; }
 
     }
 }

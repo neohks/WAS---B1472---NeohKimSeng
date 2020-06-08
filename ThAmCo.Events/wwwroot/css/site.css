@@ -23,6 +23,18 @@ body {
     width: 100%;
 }
 
+.grid-container {
+    display: grid;
+    grid-template-columns: auto auto auto;
+    padding: 10px;
+}
+
+.grid-item {
+    padding: 10px;
+    font-size: 20px;
+    text-align: center;
+}
+
 /* QR code generator */
 #qrCode {
     margin: 15px;

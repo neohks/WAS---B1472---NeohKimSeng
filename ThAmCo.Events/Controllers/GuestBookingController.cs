@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
@@ -88,25 +89,33 @@ namespace ThAmCo.Events.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("CustomerId,Customer,EventId,Event,Attended")] GuestBooking guest)
         {
+            var selectedGuest = _eventContext.Guests
+                .Include(a => a.Event)
+                .Include(a => a.Customer)
+                .FirstOrDefault(a => a.CustomerId == guest.CustomerId && a.EventId == guest.EventId);
+
             if (ModelState.IsValid)
             {
-                _eventContext.Add(guest);
-
                 try
                 {
+                    _eventContext.Add(guest);
                     await _eventContext.SaveChangesAsync();
+                    return RedirectToAction(nameof(GuestIndex));
+                }
+                catch (InvalidOperationException)
+                {
+                    TempData["msg"] = $"Error : {selectedGuest.Customer.Fullname} and {selectedGuest.Event.Title} already exist!";
                 }
                 catch (Exception ex)
                 {
-                    String x = ex.Message;
-
-                    TempData["msg"] = "Error";
-                    
-                    throw;
+                    TempData["msg"] = ex.Message;
                 }
-
-                return RedirectToAction(nameof(GuestIndex));
             }
+            else
+            {
+                TempData["msg"] = "ModelState is not valid, please verify guestbooking model";
+            }
+
             ViewData["CustomerId"] = new SelectList(_eventContext.Customers, "Id", "Fullname", guest.Customer);
             ViewData["EventId"] = new SelectList(_eventContext.Events, "Id", "Title", guest.Event);
             return View(guest);
@@ -147,6 +156,11 @@ namespace ThAmCo.Events.Controllers
         // GET: GuestBooking Register/Edit Page
         public async Task<IActionResult> Edit(int? cusid, int? eventid)
         {
+            var selectedGuest = _eventContext.Guests
+                .Include(a => a.Event)
+                .Include(a => a.Customer)
+                .FirstOrDefault(a => a.CustomerId == cusid && a.EventId == eventid);
+
             if (cusid == null || eventid == null)
             {
                 return NotFound();
@@ -158,7 +172,7 @@ namespace ThAmCo.Events.Controllers
                 return NotFound();
             }
 
-            return View(guest);
+            return View(selectedGuest);
         }
 
         //POST: GuestBooking Edit

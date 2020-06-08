@@ -67,25 +67,34 @@ namespace ThAmCo.Events.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("StaffId,Staff,EventId,Event")] Staffing staff)
         {
+
+            var selectedStaff = _eventContext.Staffing
+                .Include(a => a.Event)
+                .Include(a => a.Staff)
+                .FirstOrDefault(a => a.StaffId == staff.StaffId && a.EventId == staff.EventId);
+
             if (ModelState.IsValid)
             {
-                _eventContext.Add(staff);
-
                 try
                 {
+                    _eventContext.Add(staff);
                     await _eventContext.SaveChangesAsync();
+                    return RedirectToAction(nameof(StaffingIndex));
+                }
+                catch (InvalidOperationException)
+                {
+                    TempData["msg"] = $"Error : {selectedStaff.Staff.Fullname} and {selectedStaff.Event.Title} already existed!";
                 }
                 catch (Exception ex)
                 {
-                    String x = ex.Message;
-
-                    TempData["msg"] = "Error";
-
-                    throw;
+                    TempData["msg"] = ex.Message;
                 }
-
-                return RedirectToAction(nameof(StaffingIndex));
             }
+            else
+            {
+                TempData["msg"] = "ModelState is not valid, please verify guestbooking model";
+            }
+
             ViewData["StaffId"] = new SelectList(_eventContext.Staff, "StaffId", "Fullname", staff.Staff);
             ViewData["EventId"] = new SelectList(_eventContext.Events, "Id", "Title", staff.Event);
             return View(staff);

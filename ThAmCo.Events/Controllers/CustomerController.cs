@@ -11,7 +11,9 @@ namespace ThAmCo.Events.Controllers
     public class CustomerController : Controller
     {
         private readonly EventsDbContext _eventContext;
-
+        //Anon the customer data
+        private string anonName = "null";
+        private string anonMail = "null@null.null";
         public CustomerController(EventsDbContext eventContext)
         {
             _eventContext = eventContext;
@@ -113,7 +115,6 @@ namespace ThAmCo.Events.Controllers
             return View(customer);
         }
 
-
         // GET: Customer Delete Page
         public async Task<IActionResult> Delete(int? id)
         {
@@ -124,6 +125,10 @@ namespace ThAmCo.Events.Controllers
 
             var customer = await _eventContext.Customers
                 .FirstOrDefaultAsync(m => m.Id == id);
+
+            if (customer.FirstName == anonName && customer.Surname == anonName && customer.Email == anonMail)
+                TempData["Anonymise"] = "Done";
+
             if (customer == null)
             {
                 return NotFound();
@@ -144,7 +149,7 @@ namespace ThAmCo.Events.Controllers
             return RedirectToAction(nameof(CustomerIndex));
         }
 
-        // POST: Permenantly Anonymise a Customer
+        // GET: Permenantly Anonymise a Customer
         public async Task<IActionResult> Anonymise(int id)
         {
             var customer = await _eventContext.Customers
@@ -153,9 +158,9 @@ namespace ThAmCo.Events.Controllers
             {
                 return NotFound();
             }
-            customer.FirstName = "null";
-            customer.Surname = "null";
-            customer.Email = "null@null.null";
+            customer.FirstName = anonName;
+            customer.Surname = anonName;
+            customer.Email = anonMail;
             //Tell View to enable Delete button
             TempData["Anonymise"] = "Done";
 
