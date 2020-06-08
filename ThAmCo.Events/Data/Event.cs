@@ -16,6 +16,7 @@ namespace ThAmCo.Events.Data
         [DataType(DataType.Date)]
         public DateTime Date { get; set; }
 
+        [Required]
         [DisplayFormat(DataFormatString = "{0:hh\\:mm\\:ss}", ApplyFormatInEditMode = true)]
         public TimeSpan? Duration { get; set; }
 
