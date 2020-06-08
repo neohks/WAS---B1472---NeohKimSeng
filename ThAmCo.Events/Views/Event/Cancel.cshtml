@@ -1,0 +1,92 @@
+﻿@model ThAmCo.Events.Data.Event
+
+@{
+    ViewData["Title"] = "Cancel";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Cancel</h2>
+
+<h3>Are you sure you want to cancel @Model.Title?</h3>
+<div>
+    <h4>Event</h4>
+    <hr />
+    <dl class="dl-horizontal">
+        <dt>
+            @Html.DisplayNameFor(model => model.Title)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.Title)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.Date)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.Date)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.Duration)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.Duration)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.TypeId)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.TypeId)
+        </dd>
+        <dt>
+            Total Staffs
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.Staffings.Count)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.VenueCode)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.VenueCode)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.VenueReference)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.VenueReference)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.VenueCost)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.VenueCost)
+        </dd>
+    </dl>
+
+    <form asp-action="Delete">
+        <input type="hidden" asp-for="Id" />
+        @if (TempData["Cancel"] == null)
+        {
+            <input asp-action="CancelEvent" type="submit" value="Cancel" class="btn btn-default" />
+        }
+        else
+        {
+            <input type="hidden" asp-action="CancelEvent" value="Cancel" class="btn btn-default" />
+        }
+        |
+
+        @if (TempData["Cancel"] == null)
+        {
+            <input disabled="disabled" type="submit" value="Delete" class="btn btn-default" />
+        }
+        else
+        {
+            <input type="submit" value="Delete" class="btn btn-default" />
+        }
+        |
+        <a asp-action="EventIndex">Back to List</a>
+    </form>
+    @if (TempData["Cancel"] == null)
+    {
+        <p id="textWarning" class="text-danger">Please cancel the event before deleting it. </p>
+    }
+</div>

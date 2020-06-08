@@ -17,11 +17,12 @@ namespace ThAmCo.Events.Controllers
     public class EventController : Controller
     {
         private readonly EventsDbContext _eventContext;
-        [BindProperty]
-        public Event Event { get; set; }
 
         public EventController(EventsDbContext eventContext)
         {
+            // Inital call HttpClient, therefore later loading will be faster
+            HttpClient client = getClient("23652");
+
             _eventContext = eventContext;
         }
 
@@ -37,7 +38,7 @@ namespace ThAmCo.Events.Controllers
 
             foreach (var item in events)
             {
-                item.VenueCode = (item.VenueCode == null) ? "None" : item.VenueCode;
+                item.VenueCode = item.VenueCode ?? "None";
             }
 
             return View(events);
@@ -58,13 +59,12 @@ namespace ThAmCo.Events.Controllers
                 .ThenInclude(g => g.Staff)
                 .FirstOrDefaultAsync(m => m.Id == id);
 
-
+            // Get Event Type name
             HttpClient client = getClient("23652");
             var eventTypesResponse = await client.GetAsync("api/EventTypes");
             var eventTypes = await eventTypesResponse.Content.ReadAsAsync<IEnumerable<EventType>>();
             var selectedEvent  = eventTypes.FirstOrDefault(a => a.Id == @event.TypeId);
             ViewData["EventType"] = selectedEvent.Title;
-            ViewData["VenueName"] = "None";
 
             // If VenueCode exists
             // Then find its full name through API
@@ -74,8 +74,12 @@ namespace ThAmCo.Events.Controllers
 
                 var venue = venues.FirstOrDefault(a => a.Code == @event.VenueCode);
 
-                ViewData["VenueName"] = venue.Name;
+                @event.VenueCode = venue.Name;
             }
+
+            //Set None if null
+            @event.VenueCode = @event.VenueCode ?? "None";
+            @event.VenueReference = @event.VenueReference ?? "None";
 
             if (@event == null)
             {
@@ -88,9 +92,7 @@ namespace ThAmCo.Events.Controllers
         // Goto: Event Create page
         public async Task<IActionResult> Create()
         {
-            HttpClient client = getClient("23652");
-            var eventTypesResponse = await client.GetAsync("api/EventTypes");
-            var eventTypes = await eventTypesResponse.Content.ReadAsAsync<IEnumerable<EventType>>();
+            var eventTypes = await getEventTypes();
             ViewData["EventType"] = new SelectList(eventTypes, "Id", "Title");
 
             return View();
@@ -103,10 +105,32 @@ namespace ThAmCo.Events.Controllers
         {
             if (ModelState.IsValid)
             {
-                _eventContext.Add(@event);
-                await _eventContext.SaveChangesAsync();
-                return RedirectToAction(nameof(EventIndex)); //Go back to Index (Event Main Page)
+                try
+                {
+                    _eventContext.Add(@event);
+                    await _eventContext.SaveChangesAsync();
+                    return RedirectToAction(nameof(EventIndex));
+                }
+                catch (OverflowException)
+                {
+                    TempData["msg"] = $"Please type '{@event.Duration}:XX' instead of just '{@event.Duration}' alone";
+                }
+                catch (DbUpdateException)
+                {
+                    TempData["msg"] = "There are error while creating, please ensure your textfield are in correct format:";
+                    TempData["msgDuration"] = $"Please ensure '{@event.Duration}' in HH:mm format instead of just '{@event.Duration}'";
+                    TempData["msgDate"] = $"Please ensure '{@event.Date.ToString("dd/MM/yyyy")}' in dd/MM/yyyy format instead of '{@event.Date}'";
+                }
+                catch (Exception ex)
+                {
+                    TempData["msg"] = ex.Message;
+                }
+                
             }
+
+            var eventTypes = await getEventTypes();
+            ViewData["EventType"] = new SelectList(eventTypes, "Id", "Title");
+
             return View(@event);
         }
 
@@ -284,13 +308,51 @@ namespace ThAmCo.Events.Controllers
             return RedirectToAction(nameof(EventIndex));
         }
 
-        // POST: Cancel (Soft delete) Venue and Staffs
+        // GET: Event Cancel/Delete Page
+        public async Task<IActionResult> Cancel(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
 
+            var @event = await _eventContext.Events
+                .Include(a => a.Staffings)
+                .FirstOrDefaultAsync(m => m.Id == id);
+
+            if (@event == null)
+            {
+                return NotFound();
+            }
+
+            // Check whether it soft deleted or not
+            if (@event.Staffings.Count() == 0 && string.IsNullOrEmpty(@event.VenueCode) 
+                && string.IsNullOrEmpty(@event.VenueReference) && @event.VenueCost == 0)
+                TempData["Cancel"] = "Done";
+
+           
+            return View(@event);
+        }
+
+        // POST: Delete a Customer
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var @event = await _eventContext.Events.FindAsync(id);
+            _eventContext.Remove(@event);
+
+            await _eventContext.SaveChangesAsync();
+            return RedirectToAction(nameof(EventIndex));
+        }
+
+        // POST: Cancel (Soft delete) Venue and Staffs
         public async Task<IActionResult> CancelEvent(int id)
         {
             var @event = await _eventContext.Events.Include(e => e.Staffings).FirstOrDefaultAsync(m => m.Id == id);
 
             HttpClient client = getClient("23652");
+
             //If have Venue, delete it first
             if (@event.VenueReference != null)
             {
@@ -302,6 +364,7 @@ namespace ThAmCo.Events.Controllers
                 {
                     @event.VenueReference = null;
                     @event.VenueCode = null;
+                    @event.VenueCost = 0;
 
                     _eventContext.Update(@event);
                     await _eventContext.SaveChangesAsync();
@@ -318,9 +381,20 @@ namespace ThAmCo.Events.Controllers
                 await _eventContext.SaveChangesAsync();
             }
 
-            return RedirectToAction(nameof(EventIndex));
+            TempData["Cancel"] = "Done";
+
+            return RedirectToAction("Cancel", "Event", new { id });
         }
 
+
+        private async Task<IEnumerable<EventType>> getEventTypes()
+        {
+            HttpClient client = getClient("23652");
+            var eventTypesResponse = await client.GetAsync("api/EventTypes");
+            var eventTypes = await eventTypesResponse.Content.ReadAsAsync<IEnumerable<EventType>>();
+
+            return eventTypes;
+        }
 
         private async Task<IEnumerable<VenueAvailibilityGetApi>> getVenuesAsync(string eventType, DateTime startDate, DateTime endDate)
         {
