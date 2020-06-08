@@ -16,5 +16,7 @@ namespace ThAmCo.Events.Data
 
         [Range(1, Int32.MaxValue)]
         public int Capacity { get; set; }
+
+        public decimal VenueCost { get; set; }
     }
 }
