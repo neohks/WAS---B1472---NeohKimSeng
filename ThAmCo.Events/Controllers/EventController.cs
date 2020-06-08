@@ -1,15 +1,14 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
-using System.Web;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
 using ThAmCo.Events.Data;
 using ThAmCo.Events.Services;
-using ThAmCo.Events.ViewModels;
+using ThAmCo.Venues.Data;
 
 namespace ThAmCo.Events.Controllers
 {
@@ -28,8 +27,7 @@ namespace ThAmCo.Events.Controllers
         // GET: All Events
         public async Task<IActionResult> EventIndex()
         {
-            //Should add API call to check Venue
-            return View(await _eventContext.Events.Include(b => b.Bookings).Include(s=> s.Staffings).ThenInclude(s => s.Staff).ToListAsync());
+            return View(await _eventContext.Events.Include(b => b.Bookings).Include(s => s.Staffings).ThenInclude(s => s.Staff).ToListAsync());
         }
 
         // GET: Event Details
@@ -46,6 +44,14 @@ namespace ThAmCo.Events.Controllers
                 .Include(a => a.Staffings)
                 .ThenInclude(g => g.Staff)
                 .FirstOrDefaultAsync(m => m.Id == id);
+
+
+            HttpClient client = getClient("23652");
+            var eventTypesResponse = await client.GetAsync("api/EventTypes");
+            var eventTypes = await eventTypesResponse.Content.ReadAsAsync<IEnumerable<EventType>>();
+            var selectedEvent  = eventTypes.FirstOrDefault(a => a.Id == @event.TypeId);
+            ViewData["EventType"] = selectedEvent.Title;
+
             if (@event == null)
             {
                 return NotFound();
@@ -55,8 +61,13 @@ namespace ThAmCo.Events.Controllers
         }
 
         // Goto: Event Create page
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
+            HttpClient client = getClient("23652");
+            var eventTypesResponse = await client.GetAsync("api/EventTypes");
+            var eventTypes = await eventTypesResponse.Content.ReadAsAsync<IEnumerable<EventType>>();
+            ViewData["EventType"] = new SelectList(eventTypes, "Id", "Title");
+
             return View();
         }
 
@@ -148,17 +159,23 @@ namespace ThAmCo.Events.Controllers
 
             HttpResponseMessage response = await client.GetAsync(url);
 
-            if (response.IsSuccessStatusCode)  
+            if (response.IsSuccessStatusCode)
             {
                 var venue = await response.Content.ReadAsAsync<IEnumerable<VenueEvent>>();
 
                 if (venue.Count() == 0)
                 {
                     ViewData["None"] = "None";
+                    TempData["None"] = "No Staff Available";
                 }
                 else
                 {
+                    var staffs = _eventContext.Staff;
+
+                    ViewData["VenueList"] = new SelectList(venue.ToList());
+
                     ViewData["Venues"] = new SelectList(venue, "Code", "Name");
+                    ViewData["Staffs"] = new SelectList(staffs, "StaffId", "Fullname");
                 }
             }
             else
@@ -167,12 +184,12 @@ namespace ThAmCo.Events.Controllers
                 ModelState.AddModelError("Error", "Connection has failed, please try again.");
             }
 
-            return View();
+            return View(@event);
 
         }
 
         // POST: Reserve an event
-        public async Task<IActionResult> ConfirmReservation(int id, string VenueCode, int staffId)
+        public async Task<IActionResult> ConfirmReservation(int id, string VenueCode, int Staffings)
         {
             var @event = await _eventContext.Events
                .FirstOrDefaultAsync(m => m.Id == id);
@@ -186,11 +203,11 @@ namespace ThAmCo.Events.Controllers
             //If alrdy have venue reserve, then delete the old one
             if (@event.VenueCode != null)
             {
-                
-                //Build the url api, delete the reserved venue
-                String url = "api/Reservations?" + @event.VenueCode;
 
-                HttpResponseMessage responseRes = await client.DeleteAsync(url);
+                //Build the url api, delete the reserved venue
+                String urlRes = "api/Reservations?" + @event.VenueCode;
+
+                HttpResponseMessage responseRes = await client.DeleteAsync(urlRes);
 
                 if (responseRes.IsSuccessStatusCode)
                 {
@@ -208,7 +225,7 @@ namespace ThAmCo.Events.Controllers
             {
                 EventDate = @event.Date,
                 VenueCode = VenueCode,
-                StaffId = staffId //Null for now, later if can, add this
+                StaffId = Staffings
             };
 
             HttpResponseMessage response = await client.PostAsJsonAsync("api/Reservations", req);

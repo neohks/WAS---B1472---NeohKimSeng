@@ -1,12 +1,53 @@
 ﻿@model ThAmCo.Events.Data.Event
 
+
 @{
     ViewData["Title"] = "ReserveVenue";
 }
 
-<h2>Confirm Reservation</h2>
 
-<h4>Event</h4>
+@*<h2>Available Venues</h2>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                Venue Name
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Venues.FirstOrDefault().Description)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Venues.FirstOrDefault().Capacity)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Venues.FirstOrDefault().CostPerHour)
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in ViewBag.VenueList)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Name)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Description)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Capacity)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.CostPerHour)
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>*@
+
+
+<h2>Confirm Reservation</h2>
+<h4>Event : @Model.Title</h4>
 <hr />
 <div class="row">
     <div class="col-md-4">
@@ -14,7 +55,7 @@
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="Id" />
             <div class="form-group">
-                <label asp-for="VenueCode" class="control-label"></label>
+                <label asp-for="VenueCode" class="control-label">  Venue : </label>
 
                 @if (ViewBag.None != null)
                 {
@@ -24,9 +65,25 @@
                 else
                 {
                     <select asp-for="VenueCode" class="form-control" asp-items="ViewBag.Venues"></select>
+
+                    
                 }
             </div>
-            
+            <div class="form-group">
+                <label asp-for="Staffings" class="control-label">Representative Staff : </label>
+                @if (ViewBag.None != null)
+                {
+                    <p class="text-danger">@TempData["None"]</p>
+                }
+                else
+                {
+                    @Html.DropDownList("Staffings", (SelectList)ViewData["Staffs"])
+                    @*<select asp-for="Staffings" class="form-control" asp-items="ViewBag.Staffs"></select>*@
+                }
+
+            </div>
+
+
             <div class="form-group">
                 @if (ViewBag.None != null)
                 {

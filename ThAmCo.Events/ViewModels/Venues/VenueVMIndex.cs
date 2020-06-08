@@ -9,12 +9,12 @@ namespace ThAmCo.Events.ViewModels.Venues
     public class VenueVMIndex
     {
 
-        public VenueVMIndex(List<VenueAvailibilityGetApi> venues, DateTime? startDate, DateTime? endDate)
+        public VenueVMIndex(List<VenueAvailibilityGetApi> venues, IEnumerable<VenueAvailibilityGetApi> venueList, DateTime? startDate, DateTime? endDate)
         {
             Venues = venues;
             StartDate = startDate;
             EndDate = endDate;
-
+            VenuesList = venueList;
         }
 
         public DateTime? StartDate { get; set; }
@@ -22,6 +22,7 @@ namespace ThAmCo.Events.ViewModels.Venues
         public DateTime? EndDate { get; set; }
 
         public List<VenueAvailibilityGetApi> Venues { get; set; }
+        public IEnumerable<VenueAvailibilityGetApi> VenuesList { get; set; }
 
     }
 }

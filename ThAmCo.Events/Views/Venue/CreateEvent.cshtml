@@ -20,23 +20,27 @@
             </div>
             <div class="form-group">
                 <label asp-for="Date" class="control-label"></label>
-                <input asp-for="Date" class="form-control" readonly/>
-                <span asp-validation-for="Date" class="text-danger"></span>
+                <input asp-for="Date" class="form-control" readonly />
             </div>
             <div class="form-group">
                 <label asp-for="Duration" class="control-label"></label>
-                <input asp-for="Duration" class="form-control" placeholder="HH:mm"/>
+                <input asp-for="Duration" class="form-control" placeholder="HH:mm" />
                 <span asp-validation-for="Duration" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="TypeId" class="control-label"></label>
-                <input asp-for="TypeId" class="form-control" readonly/>
+                <input asp-for="TypeId" class="form-control" readonly />
                 <span asp-validation-for="TypeId" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="VenueCode" class="control-label"></label>
-                <input asp-for="VenueCode" class="form-control" readonly/>
+                <input asp-for="VenueCode" class="form-control" readonly />
                 <span asp-validation-for="VenueCode" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="VenueCost" class="control-label"></label>
+                <input asp-for="VenueCost" class="form-control" readonly />
+                <span asp-validation-for="VenueCost" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <input type="submit" value="Create" class="btn btn-default" />

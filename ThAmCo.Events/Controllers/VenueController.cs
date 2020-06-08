@@ -25,7 +25,7 @@ namespace ThAmCo.Events.Controllers
         // GET : Availibility Venues filtered with EventType and Date range
         public async Task<IActionResult> VenueIndex(string eventType, DateTime startDate, DateTime endDate)
         {
-            //If null show WED(Since wedding suits all venues)
+            //If null show WED by default
             eventType = string.IsNullOrEmpty(eventType) ? "WED" : eventType;
 
             var availableVenues = new List<VenueAvailibilityGetApi>().AsEnumerable();
@@ -59,7 +59,7 @@ namespace ThAmCo.Events.Controllers
                 TempData["Error"] = "Fail to response";
                 //Error Message
             }
-
+            
             var eventTypesResponse = await client.GetAsync("api/EventTypes");
             var eventTypes = await eventTypesResponse.Content.ReadAsAsync<IEnumerable<EventType>>();
 
@@ -72,6 +72,7 @@ namespace ThAmCo.Events.Controllers
             {
                 indexVM = new VenueVMIndex(
                 availableVenues.ToList(),
+                availableVenues.ToList().GroupBy(o => o.Name).Select(o => o.FirstOrDefault()),
                 null,
                 null
                 );
@@ -80,6 +81,7 @@ namespace ThAmCo.Events.Controllers
             {
                 indexVM = new VenueVMIndex(
                 availableVenues.ToList(),
+                availableVenues.ToList().GroupBy(o => o.Name).Select(o => o.FirstOrDefault()),
                 startDate,
                 endDate
                 );
@@ -89,7 +91,7 @@ namespace ThAmCo.Events.Controllers
         }
 
         // GET : Event Create page
-        public IActionResult CreateEvent(string venueCode, string eventType, DateTime date)
+        public IActionResult CreateEvent(string venueCode, string eventType, DateTime date, decimal cost)
         {
             if (venueCode == null || eventType == null)
             {
@@ -100,7 +102,8 @@ namespace ThAmCo.Events.Controllers
             {
                 VenueCode = venueCode,
                 TypeId = eventType,
-                Date = date.ToString("dd/MM/yyyy")
+                Date = date.ToString("dd/MM/yyyy"),
+                VenueCost = cost
             };
 
 
@@ -110,7 +113,7 @@ namespace ThAmCo.Events.Controllers
         // POST: Create an Event
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CreateEvent([Bind("Id,Title,TypeId,Date,Duration,VenueCode")] VenueCreateModel @event)
+        public async Task<IActionResult> CreateEvent([Bind("Id,Title,TypeId,Date,Duration,VenueCode,VenueCost")] VenueCreateModel @event)
         {
             //PostReservation
             HttpClient client = getClient("23652");
@@ -138,7 +141,8 @@ namespace ThAmCo.Events.Controllers
                         Duration = @event.Duration,
                         TypeId = @event.TypeId,
                         VenueCode = @event.VenueCode,
-                        VenueReference = Reservation.Reference
+                        VenueReference = Reservation.Reference,
+                        VenueCost = @event.VenueCost
                     };
 
                     _eventsContext.Add(newEvent);
@@ -151,7 +155,6 @@ namespace ThAmCo.Events.Controllers
             //Whenever have error goes here
             return BadRequest();
         }
-
 
         // Connects an HttpClient to a selected port
         private HttpClient getClient(string port)

@@ -7,61 +7,82 @@
 
 <h2>Venue Index</h2>
 
-@*<div class="column">
-    <div class="col-md-4">
-        <form asp-action="VenueIndex" method="get">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="EventTypes" class="control-label"> Event Type : </label>
-                <select required name="eventType" asp-for="EventTypes" class="form-control" asp-items="ViewBag.EventTypes"></select>
-            </div>
-            <div class="form-group">
-                <label asp-for="StartDate" class="control-label"> Date Begin : </label>
-                <input asp-for="StartDate" class="form-control" />
-            </div>
-            <div class="form-group">
-                <label asp-for="EndDate" class="control-label"> Date End : </label>
-                <input asp-for="EndDate" class="form-control" />
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Submit" name="btnSubmit" class="btn btn-default" />
-            </div>
-        </form>
-    </div>
-</div>*@
-<div class="row text-center">
-    <div class="col-md-4">
-        @using (Html.BeginForm("VenueIndex", "Venue", FormMethod.Get))
-        {
-        <div class="form-group">
+<div class="form-group" style="padding:10px">
+    <h3>Venue List : </h3>
+    <h4>Total Venues : @Model.VenuesList.Count()</h4>
+    <table class="table table-responsive table-striped">
+        <thead>
+            <tr>
+                <th>
+                    Venue Name
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.VenuesList.FirstOrDefault().Description)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.VenuesList.FirstOrDefault().Capacity)
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.VenuesList)
+            {
+                <tr>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Name)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Description)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Capacity)
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<div class="text-center text-danger">
+    @TempData["Empty"]
+    @TempData["Error"]
+</div>
+
+<h3>Available Venues</h3>
+<div class="row" style="margin-top:15px">
+    @using (Html.BeginForm("VenueIndex", "Venue", FormMethod.Get))
+    {
+        <div class="form-group col-1">
             <label class="control-label"> Event Type : </label>
             @Html.DropDownList("eventType", (SelectList)ViewData["EventTypes"])
 
         </div>
-        <div class="form-group">
-            <label class="control-label"> Event Type : </label>
-            @Html.Editor("beginDate")
+        <div class="form-group col-1">
+            <label class="control-label"> Start Date : </label>
+            <input asp-for="StartDate" type="date" id="beginDate" />
+            @*@Html.Editor("beginDate")*@
         </div>
-        <div class="form-group">
-            <label class="control-label"> Event Type : </label>
-            @Html.Editor("endDate")
+        <div class="form-group col-1">
+            <label class="control-label"> End Date : </label>
+            <input asp-for="EndDate" type="date" id="endDate" />
+            @*@Html.Editor("endDate")*@
         </div>
-        <div class="form-group">
+        <div class="form-group col-1">
             <input type="submit" name="bnSubmit" class="btn btn-default" />
         </div>
-        }
-    </div>
+    }
+    @*<div class="form-group">
+        <input id="btnShowAll" type="submit" name="bnShowAll" value="Show All" class="btn btn-default" />
+    </div>*@
+
 </div>
 
-<h3 class="text-center">Total Available Venues : @Model.Venues.Count()</h3>
-<table class="table">
+<h4>Total Available Venues : @Model.Venues.Count()</h4>
+<table class="table table-responsive table-striped">
     <thead>
         <tr>
             <th>
                 Venue Name
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Venues.FirstOrDefault().Description)
             </th>
             <th>
                 @Html.DisplayNameFor(model => model.Venues.FirstOrDefault().Capacity)
@@ -83,9 +104,6 @@
                     @Html.DisplayFor(modelItem => item.Name)
                 </td>
                 <td>
-                    @Html.DisplayFor(modelItem => item.Description)
-                </td>
-                <td>
                     @Html.DisplayFor(modelItem => item.Capacity)
                 </td>
                 <td>
@@ -95,7 +113,7 @@
                     @Html.DisplayFor(modelItem => item.CostPerHour)
                 </td>
                 <td>
-                    <a asp-action="CreateEvent" asp-route-venueCode="@item.Code" asp-route-eventType="@ViewData["EventType"]" asp-route-date="@item.Date.ToString("dd/MM/yyyy")">Create Event</a>
+                    <a asp-action="CreateEvent" asp-route-venueCode="@item.Code" asp-route-eventType="@ViewData["EventType"]" asp-route-date="@item.Date.ToString("dd/MM/yyyy")" asp-route-cost="@item.CostPerHour">Create Event</a>
                 </td>
             </tr>
         }

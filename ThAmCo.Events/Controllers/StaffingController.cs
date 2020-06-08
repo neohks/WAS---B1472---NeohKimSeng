@@ -46,6 +46,22 @@ namespace ThAmCo.Events.Controllers
             return View();
         }
 
+        // GET: From Event to StaffBooking
+        public IActionResult CreateStaffEvent(int eventid)
+        {
+            ViewData["StaffId"] = new SelectList(_eventContext.Staff, "StaffId", "Fullname");
+            ViewData["EventId"] = new SelectList(_eventContext.Events, "Id", "Title", eventid);
+            var @event = _eventContext.Events.FirstOrDefault(a=>a.Id == eventid);
+
+            Staffing staff = new Staffing()
+            {
+                Event = @event,
+                EventId = @event.Id,
+            };
+
+            return View(staff);
+        }
+
         // POST: Create Guest
         [HttpPost]
         [ValidateAntiForgeryToken]

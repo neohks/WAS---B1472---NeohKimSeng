@@ -144,36 +144,29 @@ namespace ThAmCo.Events.Controllers
         #endregion
 
         #region Edit
-        //Issue: Use Dictionary cannot solve as Attend is Bool, not Int.
-        private static int? editCusId; //Workaround for Post Edit
-        // GET: GuestBooking Edit Page
+        // GET: GuestBooking Register/Edit Page
         public async Task<IActionResult> Edit(int? cusid, int? eventid)
         {
             if (cusid == null || eventid == null)
             {
                 return NotFound();
             }
-            editCusId = cusid;
 
             var guest = await _eventContext.Guests.FindAsync(cusid, eventid);
             if (guest == null)
             {
                 return NotFound();
             }
-            ViewData["CustomerId"] = new SelectList(_eventContext.Customers, "Id", "Fullname", guest.CustomerId);
-            ViewData["EventId"] = new SelectList(_eventContext.Events, "Id", "Title", guest.EventId);
+
             return View(guest);
         }
 
         //POST: GuestBooking Edit
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int cusid, int eventid, [Bind("CustomerId,Customer,EventId,Event,Attended")] GuestBooking guest)
+        public async Task<IActionResult> Edit(int customerid, int eventid, [Bind("CustomerId,Customer,EventId,Event,Attended")] GuestBooking guest)
         {
-            //int cusid = pairIDs["CustomerId"];
-            //int eventid = pairIDs["EventId"];
-
-            if (eventid != guest.EventId || editCusId != guest.CustomerId)
+            if (eventid != guest.EventId || customerid != guest.CustomerId)
             {
                 return NotFound();
             }

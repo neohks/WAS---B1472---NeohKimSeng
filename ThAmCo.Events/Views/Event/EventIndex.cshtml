@@ -51,15 +51,18 @@
             <td>
                 @if ((item.Staffings.Count() <= (item.Bookings.Count() / 10)) && item.Bookings.Count() > 0)
                 {
-                    <p class="text-danger">
-                        <b>+ Staff Insufficient</b>
-                    </p>
+                <p style="margin:0px">
+                    <b class ="text-danger">+ Staff Insufficient</b>
+                </p>
+                <a asp-action="CreateStaffEvent" asp-controller="Staffing" asp-route-eventid="@item.Id">Go to StaffBookings</a>
                 }
                 @if ((item.Staffings.Where(a => a.Staff.FirstAider).Count() == 0) && item.Bookings.Count() > 0)
                 {
-                    <p class="text-danger">
-                        <b>+ Require First Aider</b>
-                    </p>
+                <p style="margin:10px 0px 0px">
+                    <b class="text-danger">+ Require First Aider</b>
+                
+                </p>
+                <a asp-action="StaffIndex" asp-controller="Staff" asp-route-id="@item.Id">Go to Staffs</a>   
                 }
             </td>
             <td>
