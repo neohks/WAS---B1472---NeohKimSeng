@@ -22,6 +22,6 @@ namespace ThAmCo.Events.ViewModels.Venues
         [Required]
         public TimeSpan? Duration { get; set; }
 
-
+        public decimal VenueCost { get; set; }
     }
 }
