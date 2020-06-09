@@ -7,11 +7,11 @@
 
 <h2>Venue Index</h2>
 
-<div class="form-group" style="padding:10px">
+<div class="form-group" style="padding:0px 10px 10px 10px">
     <h3>Venue List : </h3>
     <h4>Total Venues : @Model.VenuesList.Count()</h4>
     <table class="table table-responsive table-striped">
-        <thead>
+        <thead class="table-bordered">
             <tr>
                 <th>
                     Venue Name
@@ -49,25 +49,25 @@
 </div>
 
 <h3>Available Venues</h3>
-<div class="row" style="margin-top:15px">
+<div class="row form-horizontal center-block text-center" style="margin-top:15px; margin-left:auto">
     @using (Html.BeginForm("VenueIndex", "Venue", FormMethod.Get))
     {
-        <div class="form-group col-1">
+        <div class="form-group col-lg-3">
             <label class="control-label"> Event Type : </label>
             @Html.DropDownList("eventType", (SelectList)ViewData["EventTypes"])
 
         </div>
-        <div class="form-group col-1">
+        <div class="form-group col-lg-3">
             <label class="control-label"> Start Date : </label>
             <input asp-for="StartDate" type="date" id="beginDate" />
             @*@Html.Editor("beginDate")*@
         </div>
-        <div class="form-group col-1">
+        <div class="form-group col-lg-3">
             <label class="control-label"> End Date : </label>
             <input asp-for="EndDate" type="date" id="endDate" />
             @*@Html.Editor("endDate")*@
         </div>
-        <div class="form-group col-1">
+        <div class="form-group col-lg-3">
             <input type="submit" name="bnSubmit" class="btn btn-default" />
         </div>
     }
@@ -79,7 +79,7 @@
 
 <h4>Total Available Venues : @Model.Venues.Count()</h4>
 <table class="table table-responsive table-striped">
-    <thead>
+    <thead class="table-bordered">
         <tr>
             <th>
                 Venue Name

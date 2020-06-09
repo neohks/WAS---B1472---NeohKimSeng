@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.EntityFrameworkCore;
 using ThAmCo.Events.Data;
 using ThAmCo.Events.Services;
 using ThAmCo.Events.ViewModels.Venues;
@@ -115,24 +116,25 @@ namespace ThAmCo.Events.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateEvent([Bind("Id,Title,TypeId,Date,Duration,VenueCode,VenueCost")] VenueCreateModel @event)
         {
-            //PostReservation
-            HttpClient client = getClient("23652");
 
-            ReservationPostApi req = new ReservationPostApi
+            if (ModelState.IsValid)
             {
-                EventDate = DateTime.Parse(@event.Date),
-                VenueCode = @event.VenueCode,
-                StaffId = 0 //Null for now, later if can, add this
-            };
+                //PostReservation
+                HttpClient client = getClient("23652");
 
-            HttpResponseMessage response = await client.PostAsJsonAsync("api/Reservations", req);
-
-            if (response.IsSuccessStatusCode)
-            {
-                var Reservation = await response.Content.ReadAsAsync<ReservationGetApi>();
-
-                if (ModelState.IsValid)
+                ReservationPostApi req = new ReservationPostApi
                 {
+                    EventDate = DateTime.Parse(@event.Date),
+                    VenueCode = @event.VenueCode,
+                    StaffId = 0 //Null for now, later if can, add this
+                };
+
+                HttpResponseMessage response = await client.PostAsJsonAsync("api/Reservations", req);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var Reservation = await response.Content.ReadAsAsync<ReservationGetApi>();
+
                     var newEvent = new Event
                     {
                         Id = @event.Id,
@@ -145,15 +147,49 @@ namespace ThAmCo.Events.Controllers
                         VenueCost = @event.VenueCost
                     };
 
-                    _eventsContext.Add(newEvent);
-                    await _eventsContext.SaveChangesAsync();
-                    return RedirectToAction("EventIndex", "Event");
+                    try
+                    {
+                        _eventsContext.Add(newEvent);
+                        await _eventsContext.SaveChangesAsync();
+                        return RedirectToAction("EventIndex", "Event");
+                    }
+                    catch (OverflowException)
+                    {
+                        await deleteReservationPostAsync(client, newEvent);
+                        TempData["msg"] = $"Please type '{@event.Duration}:XX' instead of just '{@event.Duration}' alone";
+                    }
+                    catch (DbUpdateException)
+                    {
+                        await deleteReservationPostAsync(client, newEvent);
+                        TempData["msg"] = "There is an error while creating, please ensure your textfield are in correct format:";
+                        TempData["msgDuration"] = $"Please ensure '{@event.Duration}' in HH:mm format instead of just '{@event.Duration}'";
+                    }
+                    catch (Exception ex)
+                    {
+                        await deleteReservationPostAsync(client, newEvent);
+                        TempData["msg"] = ex.Message;
+                    }
+
+
                 }
-                return View(@event);
             }
 
-            //Whenever have error goes here
-            return BadRequest();
+            return View(@event);
+        }
+
+
+        //Delete Reservation if catch exception, since posted
+        private async Task deleteReservationPostAsync(HttpClient client, Event eventFail)
+        {
+
+            if (eventFail.VenueReference != null)
+            {
+                //Build the url api, delete the reserved venue
+                String urlRes = "api/Reservations/" + eventFail.VenueReference;
+
+                HttpResponseMessage responseRes = await client.DeleteAsync(urlRes);
+
+            }
         }
 
         // Connects an HttpClient to a selected port

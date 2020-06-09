@@ -7,7 +7,7 @@
 <h2>Staff Booking Page</h2>
 
 <h3>Staffs</h3>
-<h4>Registered Staffs Count : @Model.Staffs.Count()</h4>
+<h4>Total Booked Staffs: @Model.Staffs.Count()</h4>
 
 <p>
     <a asp-action="Create" asp-items=Id>Book a Staff</a>
@@ -20,10 +20,10 @@
                 @Html.DisplayNameFor(model => model.Staffs.FirstOrDefault().Staff)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Staffs.FirstOrDefault().Event)
+                @Html.DisplayNameFor(model => model.Staffs.FirstOrDefault().Staff.FirstAider)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Staffs.FirstOrDefault().Staff.FirstAider)
+                @Html.DisplayNameFor(model => model.Staffs.FirstOrDefault().Event)
             </th>
             <th></th>
         </tr>
@@ -31,20 +31,20 @@
     <tbody>
         @foreach (var item in Model.Staffs)
         {
-            <tr>
-                <td>
-                    @Html.DisplayFor(modelItem => item.Staff.Fullname)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.Event.Title)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.Staff.FirstAider)
-                </td>
-                <td>
-                    <a asp-action="Delete" asp-route-staffid="@item.StaffId" asp-route-eventid="@item.EventId">Remove</a>
-                </td>
-            </tr>
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.Staff.Fullname)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Staff.FirstAider)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Event.Title)
+            </td>
+            <td>
+                <a asp-action="Delete" asp-route-staffid="@item.StaffId" asp-route-eventid="@item.EventId">Remove</a>
+            </td>
+        </tr>
         }
     </tbody>
 </table>

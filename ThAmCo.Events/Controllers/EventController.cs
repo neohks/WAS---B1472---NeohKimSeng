@@ -20,8 +20,10 @@ namespace ThAmCo.Events.Controllers
 
         public EventController(EventsDbContext eventContext)
         {
-            // Inital call HttpClient, therefore later loading will be faster
-            HttpClient client = getClient("23652");
+            // Inital call HttpClient
+            var client = getEventTypes();
+      
+            
 
             _eventContext = eventContext;
         }
@@ -117,7 +119,7 @@ namespace ThAmCo.Events.Controllers
                 }
                 catch (DbUpdateException)
                 {
-                    TempData["msg"] = "There are error while creating, please ensure your textfield are in correct format:";
+                    TempData["msg"] = "There is an error while creating, please ensure your textfield are in correct format:";
                     TempData["msgDuration"] = $"Please ensure '{@event.Duration}' in HH:mm format instead of just '{@event.Duration}'";
                     TempData["msgDate"] = $"Please ensure '{@event.Date.ToString("dd/MM/yyyy")}' in dd/MM/yyyy format instead of '{@event.Date}'";
                 }
@@ -126,6 +128,10 @@ namespace ThAmCo.Events.Controllers
                     TempData["msg"] = ex.Message;
                 }
                 
+            }
+            else
+            {
+                TempData["msg"] = "There is an error while with the model state, contact admin asap";
             }
 
             var eventTypes = await getEventTypes();
@@ -197,6 +203,11 @@ namespace ThAmCo.Events.Controllers
             //Get the details of selected event based on its ID
             var @event = await _eventContext.Events
                 .FirstOrDefaultAsync(m => m.Id == id);
+
+            if (@event == null)
+            {
+                return NotFound();
+            }
 
             HttpClient client = getClient("23652");
 
@@ -389,11 +400,18 @@ namespace ThAmCo.Events.Controllers
 
         private async Task<IEnumerable<EventType>> getEventTypes()
         {
-            HttpClient client = getClient("23652");
-            var eventTypesResponse = await client.GetAsync("api/EventTypes");
-            var eventTypes = await eventTypesResponse.Content.ReadAsAsync<IEnumerable<EventType>>();
-
-            return eventTypes;
+            try
+            {
+                HttpClient client = getClient("23652");
+                var eventTypesResponse = await client.GetAsync("api/EventTypes");
+                var eventTypes = await eventTypesResponse.Content.ReadAsAsync<IEnumerable<EventType>>();
+                return eventTypes;
+            }
+            catch (Exception)
+            {
+                //Ask user to ask admin to connect to server
+                throw;
+            }
         }
 
         private async Task<IEnumerable<VenueAvailibilityGetApi>> getVenuesAsync(string eventType, DateTime startDate, DateTime endDate)

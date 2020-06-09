@@ -121,6 +121,11 @@ namespace ThAmCo.Events.Controllers
             var staff = await _eventContext.Staff
                 .FirstOrDefaultAsync(m => m.StaffId == staffid);
 
+            if (staff == null)
+            {
+                return NotFound();
+            }
+
             if (staff.FirstName == anonName && staff.Surname == anonName && staff.Email == anonMail)
                 TempData["Anonymise"] = "Done";
 
@@ -154,6 +159,8 @@ namespace ThAmCo.Events.Controllers
             staff.FirstName = anonName;
             staff.Surname = anonName;
             staff.Email = anonMail;
+            staff.FirstAider = false;
+
             //Tell View to enable Delete button
             TempData["Anonymise"] = "Done";
 
