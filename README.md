@@ -28,7 +28,7 @@ Nuget included:
 
 + Guest Bookings
 
-![Guest Bookings][https://github.com/neohks/WAS---B1472---NeohKimSeng/blob/master/screenshots/guestbooking.PNG)
+![Guest Bookings](https://github.com/neohks/WAS---B1472---NeohKimSeng/blob/master/screenshots/guestbooking.PNG)
 
 
 + Staffs
